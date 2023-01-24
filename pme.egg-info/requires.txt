@@ -1,0 +1,6 @@
+pandas
+scikit-learn
+pm4py
+torch
+gensim
+karateclub
