@@ -102,7 +102,7 @@ Get the top most repeated variants
   - **Return**: Dictionary with the top repeated variants and their count.
 
 #### xes
-- ***get_datasets_lists(path: str, batch_mode: bool) -> list***:
+- ***get_datasets_list(path: str, batch_mode: bool) -> list***:
 Get list of paths to datasets to be processed.
   - **Parameters**:
     - *path*: Path to the dataset or folder.
