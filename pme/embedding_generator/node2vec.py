@@ -23,8 +23,8 @@ def get_node2vec_embeddings(graph: nx.Graph, win_size: int, emb_size: int,
     """
     start_time = time()
     node2vec = Node2Vec(walk_number=walk_number, walk_length=walk_length,
-                        dimensions=emb_size, workers=1, window_size=win_size,
-                        epochs=epochs, learning_rate=learning_rate, min_count=1, seed=seed)
+                        dimensions=emb_size, workers=1, window_size=win_size, epochs=epochs,
+                        learning_rate=learning_rate, min_count=1, p=p, q=q, seed=seed)
     node2vec.fit(graph)
     end_time = time()
 

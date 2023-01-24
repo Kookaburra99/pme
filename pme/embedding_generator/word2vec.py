@@ -23,8 +23,8 @@ def get_skipgram_embeddings(cases: list[list], win_size: int, emb_size: int,
     """
     start_time = time()
     w2v_model = Word2Vec(min_count=0, window=win_size, vector_size=emb_size,
-                         alpha=learning_rate, min_alpha=min_lr,
-                         negative=ns_rate, batch_words=batch_size, sg=1)
+                         alpha=learning_rate, min_alpha=min_lr, negative=ns_rate,
+                         batch_words=batch_size, sg=1, seed=seed)
     w2v_model.build_vocab(cases)
     w2v_model.train(cases, total_examples=w2v_model.corpus_count, epochs=epochs, report_delay=1)
     end_time = time()
@@ -59,8 +59,8 @@ def get_cbow_embeddings(cases: list[list], win_size: int, emb_size: int,
     """
     start_time = time()
     w2v_model = Word2Vec(min_count=0, window=win_size, vector_size=emb_size,
-                         alpha=learning_rate, min_alpha=min_lr,
-                         negative=ns_rate, batch_words=batch_size, sg=0)
+                         alpha=learning_rate, min_alpha=min_lr, negative=ns_rate,
+                         batch_words=batch_size, sg=0, seed=seed)
     w2v_model.build_vocab(cases)
     w2v_model.train(cases, total_examples=w2v_model.corpus_count, epochs=epochs, report_delay=1)
     end_time = time()

@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 from ..utils import DataFrameFields
-from stats import get_num_cases, get_num_activities, get_num_resources
+from .stats import get_num_cases, get_num_activities, get_num_resources
 
 
 class EventlogDataset:
