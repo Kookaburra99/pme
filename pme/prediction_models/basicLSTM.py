@@ -208,14 +208,14 @@ def train_test_LSTMonehot(train_cases: list[list], val_cases: list[list], test_c
     pred_model.train_model(learning_rate, epochs, 10)
     end_time = time()
     train_time = end_time - start_time
-    print(f'Time to train LSTM onehot: {train_time}')
+    # print(f'Time to train LSTM onehot: {train_time}')
 
     start_time = time()
     acc = pred_model.test_predictions()
     end_time = time()
     test_time = end_time - start_time
-    print(f'Time to test LSTM onehot: {test_time}')
-    print(f'LSTM onehot accuracy: {acc}')
+    # print(f'Time to test LSTM onehot: {test_time}')
+    # print(f'LSTM onehot accuracy: {acc}')
 
     return acc, train_time, test_time
 
@@ -424,14 +424,14 @@ def train_test_LSTMemblayer(train_cases: list[list], val_cases: list[list], test
     pred_model.train_model(learning_rate, epochs, 10)
     end_time = time()
     train_time = end_time - start_time
-    print(f'Time to train LSTM emblayer: {train_time}')
+    # print(f'Time to train LSTM emblayer: {train_time}')
 
     start_time = time()
     acc = pred_model.test_predictions()
     end_time = time()
     test_time = end_time - start_time
-    print(f'Time to test LSTM emblayer: {test_time}')
-    print(f'LSTM emblayer accuracy: {acc}')
+    # print(f'Time to test LSTM emblayer: {test_time}')
+    # print(f'LSTM emblayer accuracy: {acc}')
 
     return acc, train_time, test_time
 
@@ -644,13 +644,13 @@ def train_test_LSTMembeddings(train_cases: list[list], val_cases: list[list], te
     pred_model.train_model(learning_rate, epochs, 10)
     end_time = time()
     train_time = end_time - start_time
-    print(f'Time to train LSTM embeddings: {train_time}')
+    # print(f'Time to train LSTM embeddings: {train_time}')
 
     start_time = time()
     acc = pred_model.test_predictions()
     end_time = time()
     test_time = end_time - start_time
-    print(f'Time to test LSTM embeddings: {test_time}')
-    print(f'LSTM embeddings accuracy: {acc}')
+    # print(f'Time to test LSTM embeddings: {test_time}')
+    # print(f'LSTM embeddings accuracy: {acc}')
 
     return acc, train_time, test_time
