@@ -109,7 +109,7 @@ Get list of paths to datasets to be processed.
     - *batch_mode*: If batch mode is used or only one dataset.
   - **Return**:  A list of the path to datasets.
 - ***convert_xes_to_csv(xes_path: str, use_act: bool = True, use_time: bool = True,
-use_res: bool = True, other_cols: dict = None, csv_path: str = None) -> str:***
+use_res: bool = True, csv_path: str = None) -> str:***
 Convert the XES file with the dataset to a CSV format file.
   - **Parameters**:
     - *xes_path*: Full path to the XES file.

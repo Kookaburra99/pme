@@ -80,12 +80,12 @@ def convert_xes_to_csv(xes_path: str, use_act: bool = True, use_time: bool = Tru
     if XESFields.LIFECYCLE_COLUMN in df_log:
         unique_lifecycle = df_log[XESFields.LIFECYCLE_COLUMN].unique()
         if len(unique_lifecycle) > 1:
-            df_log[XESFields.ACTIVITY_COLUMN] = df_log[XESFields.ACTIVITY_COLUMN].astype(str) + "+" \
+            df_log.loc[:, XESFields.ACTIVITY_COLUMN] = df_log[XESFields.ACTIVITY_COLUMN].astype(str) + "+" \
                                                 + df_log[XESFields.LIFECYCLE_COLUMN]
 
     # Correct timestamp format
     if XESFields.TIMESTAMP_COLUMN in df_log:
-        df_log[XESFields.TIMESTAMP_COLUMN] = pd.to_datetime(
+        df_log.loc[:, XESFields.TIMESTAMP_COLUMN] = pd.to_datetime(
             df_log[XESFields.TIMESTAMP_COLUMN], utc=True)
 
     output_columns = __select_output_columns(use_act, use_time, use_res)
@@ -114,10 +114,11 @@ def convert_xes_to_csv(xes_path: str, use_act: bool = True, use_time: bool = Tru
     # Write in CSV
     csv_file = Path(xes_path).stem.split(".")[0] + ".csv"
     if csv_path:
-        csv_path = os.path.join(csv_path, csv_file)
+        csv_path = Path(csv_path)
     else:
-        csv_path = os.path.join(os.getcwd(), csv_file)
+        csv_path = Path(os.getcwd())
+    full_csv_path = os.path.join(csv_path, csv_file)
 
-    df_log.to_csv(csv_path, index=False)
+    df_log.to_csv(full_csv_path, index=False)
 
-    return csv_path
+    return full_csv_path

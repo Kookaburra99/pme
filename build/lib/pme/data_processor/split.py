@@ -66,7 +66,7 @@ def make_crossvalidation(csv_path: str, num_folds: int = 5, val_size_from_train:
     splits = kfold.split(indexes)
 
     filename = Path(csv_path).stem + ".csv"
-    write_path = splits_path if splits_path else str(Path(csv_path).parent) + '/crossvalidation/'
+    write_path = splits_path if splits_path else str(Path(csv_path).parent) + '/crossvalidation'
 
     if not os.path.exists(write_path):
         os.makedirs(write_path)
@@ -86,8 +86,8 @@ def make_crossvalidation(csv_path: str, num_folds: int = 5, val_size_from_train:
         val_df = pd.concat(val_groups)
         test_df = pd.concat(test_groups)
 
-        train_df.to_csv(write_path + "fold" + str(fold) + "_train_" + filename)
-        val_df.to_csv(write_path + "fold" + str(fold) + "_val_" + filename)
-        test_df.to_csv(write_path + "fold" + str(fold) + "_test_" + filename)
+        train_df.to_csv(write_path + "/fold" + str(fold) + "_train_" + filename)
+        val_df.to_csv(write_path + "/fold" + str(fold) + "_val_" + filename)
+        test_df.to_csv(write_path + "/fold" + str(fold) + "_test_" + filename)
 
         fold += 1

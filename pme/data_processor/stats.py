@@ -67,7 +67,7 @@ def get_top_variants(data: pd.DataFrame, top: int = 5) -> dict:
     """
     data['Activity'] = data['Activity'].astype(str)
     cases = data.groupby(DataFrameFields.CASE_COLUMN)
-    variants = cases['Activity'].agg("->".join)
+    variants = cases['Activity'].agg("->".join).value_counts()
     top = len(variants) if top > len(variants) else top
-    top_variants = variants[:top].value_counts().to_dict()
+    top_variants = variants[:top].to_dict()
     return top_variants
