@@ -64,10 +64,11 @@ def get_cases_as_sentences(data: pd.DataFrame) -> list[list]:
     return list_cases
 
 
-def get_process_graph(data: pd.DataFrame) -> nx.Graph:
+def get_process_graph(data: pd.DataFrame, num_activities: int) -> nx.Graph:
     """
     Generate the Networkx Graph of the process from the eventlog
     :param data: Pandas DataFrame with the cases
+    :param num_activities: Number of unique activities in the process
     :return: Networkx Graph of the process
     """
 
@@ -80,4 +81,7 @@ def get_process_graph(data: pd.DataFrame) -> nx.Graph:
     for pairs, counts in dfg.items():
         G.add_edge(int(pairs[0]), int(pairs[1]))
 
+    for i in range(num_activities):
+        if i not in (G.nodes):
+            G.add_node(i)
     return G
