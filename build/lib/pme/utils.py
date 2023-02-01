@@ -64,10 +64,11 @@ def get_cases_as_sentences(data: pd.DataFrame) -> list[list]:
     return list_cases
 
 
-def get_process_graph(data: pd.DataFrame) -> nx.Graph:
+def get_process_graph(data: pd.DataFrame, num_activities: int) -> nx.Graph:
     """
     Generate the Networkx Graph of the process from the eventlog
     :param data: Pandas DataFrame with the cases
+    :param num_activities: Number of unique activities in the process
     :return: Networkx Graph of the process
     """
 
@@ -80,4 +81,40 @@ def get_process_graph(data: pd.DataFrame) -> nx.Graph:
     for pairs, counts in dfg.items():
         G.add_edge(int(pairs[0]), int(pairs[1]))
 
+    for i in range(num_activities):
+        if i not in G.nodes:
+            G.add_node(i)
+    return G
+
+
+def get_process_weighted_digraph(data: pd.DataFrame, num_activities: int) -> nx.DiGraph:
+    """
+    Generate the weighted Networkx DiGraph of the process from the eventlog.
+    The weights of the edges depend on the number of times that the both activities
+    represented by the nodes appear together in the eventlog.
+    :param data: Pandas DataFrame with the cases
+    :param num_activities: Number of unique activities in the process
+    :return: Networkx DiGraph of the process
+    """
+
+    dfg, sa, ea = pm4py.discovery.discover_dfg_typed(data,
+                                                     activity_key=DataFrameFields.ACTIVITY_COLUMN,
+                                                     timestamp_key=DataFrameFields.TIMESTAMP_COLUMN,
+                                                     case_id_key=DataFrameFields.CASE_COLUMN)
+
+    dict_acts_count = {}
+    for pairs, counts in dfg.items():
+        if int(pairs[0]) in dict_acts_count:
+            dict_acts_count[int(pairs[0])] += counts
+        else:
+            dict_acts_count[int(pairs[0])] = counts
+
+    G = nx.DiGraph()
+    for pairs, counts in dfg.items():
+        if counts != 0:
+            G.add_edge(int(pairs[0]), int(pairs[1]), weight=counts/dict_acts_count[int(pairs[0])])
+
+    for i in range(num_activities):
+        if i not in G.nodes:
+            G.add_node(i)
     return G

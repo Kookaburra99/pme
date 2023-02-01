@@ -18,6 +18,7 @@ pme/embedding_generator/acov.py
 pme/embedding_generator/deepwalk.py
 pme/embedding_generator/diff2vec.py
 pme/embedding_generator/dwc.py
+pme/embedding_generator/gepm.py
 pme/embedding_generator/glee.py
 pme/embedding_generator/glove.py
 pme/embedding_generator/laplacianeigenmaps.py
