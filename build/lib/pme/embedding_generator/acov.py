@@ -126,7 +126,6 @@ class ACOV(nn.Module):
             # Training
             self.train()
 
-            train_sum_loss = []
             for mini_batch in self.train_loader:
                 current = mini_batch[0]
                 context_real = mini_batch[1]
