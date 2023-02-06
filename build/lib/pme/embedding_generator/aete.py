@@ -1,6 +1,4 @@
 import pathlib
-import random
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -22,7 +20,7 @@ class AETE(nn.Module):
         Creates the model for AETE embeddings
         :param num_categories: Number of unique categories (number
         of different embeddings)
-        :param win_size: Size of the context windows
+        :param win_size: Size of the context window
         :param emb_size: Size of the embedding
         :param device: CPU or GPU, where the model will be executed
         :param seed: Seed to set the random state and get reproducibility
@@ -221,10 +219,10 @@ def get_aete_embeddings(train_cases: list[list], val_cases: list[list], win_size
     end_time = time()
 
     dict_embeddings = {}
-    weights = list(aete_model.input_acts[win_size].parameters())[0].data
+    weights = list(aete_model.output_acts[win_size].parameters())[0].data
     for i in range(aete_model.num_categories):
         dict_embeddings.update({
-            i: weights[:, i].cpu().numpy()
+            i: weights[i, :].cpu().numpy()
         })
 
     return dict_embeddings, end_time - start_time

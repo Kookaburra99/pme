@@ -9,15 +9,15 @@ from time import time
 from ..utils import get_device
 
 
-class AETE(nn.Module):
+class GAEME(nn.Module):
     """
-    Implementation of AETE (AutoEncoder to Train Embeddings) model
+    Implementation of GAEME (Generative-AutoEncoder-Model-Embeddings)
     """
 
     def __init__(self, num_categories: int, win_size: int,
                  emb_size: int, device: torch.device, seed: int = 21):
         """
-        Creates the model for AETE embeddings
+        Creates the model for GAEME embeddings
         :param num_categories: Number of unique categories (number
         of different embeddings)
         :param win_size: Size of the context window
@@ -117,7 +117,7 @@ class AETE(nn.Module):
 
     def save_model(self, path_model: str):
         """
-        Save the full AETE module
+        Save the full GAEME module
         :param path_model: Full path where model will be stored
         """
         directory = pathlib.Path(path_model).parent
@@ -129,15 +129,15 @@ class AETE(nn.Module):
         self = torch.load(path_model)
 
     def train_embeddings(self, learning_rate: float, epochs: int, early_stop: int = None,
-                         path_model: str = './models/AETE_model.m'):
+                         path_model: str = './models/GAEME_model.m'):
         """
-        Train the AETE model with the stored 'train_loader'
+        Train the GAEME model with the stored 'train_loader'
         and validate it with the stored 'val_loader'. The best
         model in validation is kept
         :param learning_rate: The initial learning rate
         :param epochs: Number of epochs of training
         :param path_model: Full path where model will be stored.
-        Default is './models/AETE_model.m'
+        Default is './models/GAEME_model.m'
         :param early_stop: Number of epochs after which early stopping
         is performed if the validation loss does not improve
         """
@@ -192,11 +192,11 @@ class AETE(nn.Module):
         self.load_best_model(path_model)
 
 
-def get_aete_embeddings(train_cases: list[list], val_cases: list[list], win_size: int, emb_size: int,
+def get_gaeme_embeddings(train_cases: list[list], val_cases: list[list], win_size: int, emb_size: int,
                         num_categories: int, learning_rate: float = 0.05, epochs: int = 200,
                         batch_size: int = 32, seed: int = 21, use_gpu: bool = True) -> (dict, float):
     """
-    Train AETE embeddings and return a dictionary with pairs [activity identifier - embedding]
+    Train GAEME embeddings and return a dictionary with pairs [activity identifier - embedding]
     :param train_cases: List of lists, each of which contains the activities of each case in training partition
     :param val_cases: List of lists, each of which contains the activities of each case in validation partition
     :param win_size: Size of the window context
@@ -212,17 +212,21 @@ def get_aete_embeddings(train_cases: list[list], val_cases: list[list], win_size
     device = get_device(use_gpu)
 
     start_time = time()
-    aete_model = AETE(num_categories, win_size, emb_size, device, seed)
-    aete_model.get_autoencoder_dataloader(train_cases, batch_size, 'train')
-    aete_model.get_autoencoder_dataloader(val_cases, batch_size, 'val')
-    aete_model.train_embeddings(learning_rate, epochs, 10)
+    gaeme_model = GAEME(num_categories, win_size, emb_size, device, seed)
+    gaeme_model.get_autoencoder_dataloader(train_cases, batch_size, 'train')
+    gaeme_model.get_autoencoder_dataloader(val_cases, batch_size, 'val')
+    gaeme_model.train_embeddings(learning_rate, epochs, 10)
     end_time = time()
 
     dict_embeddings = {}
-    weights = list(aete_model.output_acts[win_size].parameters())[0].data
-    for i in range(aete_model.num_categories):
+    for i in range(gaeme_model.num_categories):
+        ae_input = torch.zeros((2 * win_size + 1) * num_categories, device=device)
+        idx_act = (2 * win_size * num_categories) + i
+        ae_input[idx_act] = 1
+
+        emb = gaeme_model.encode(ae_input)
         dict_embeddings.update({
-            i: weights[i, :].cpu().numpy()
+            i: emb.cpu().numpy()
         })
 
     return dict_embeddings, end_time - start_time
