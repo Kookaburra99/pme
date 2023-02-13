@@ -220,11 +220,11 @@ def get_gaeme_embeddings(train_cases: list[list], val_cases: list[list], win_siz
 
     dict_embeddings = {}
     for i in range(gaeme_model.num_categories):
-        ae_input = torch.zeros((2 * win_size + 1) * num_categories, device=device)
+        ae_input = torch.zeros(1, (2 * win_size + 1) * num_categories, device=device)
         idx_act = (2 * win_size * num_categories) + i
-        ae_input[idx_act] = 1
+        ae_input[0, idx_act] = 1
 
-        emb = gaeme_model.encode(ae_input)
+        emb = gaeme_model.encode(ae_input).data[0]
         dict_embeddings.update({
             i: emb.cpu().numpy()
         })
