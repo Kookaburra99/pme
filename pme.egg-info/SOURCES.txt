@@ -15,7 +15,7 @@ pme/data_processor/stats.py
 pme/data_processor/xes.py
 pme/embedding_generator/__init__.py
 pme/embedding_generator/acov.py
-pme/embedding_generator/aete.py
+pme/embedding_generator/aerac.py
 pme/embedding_generator/deepwalk.py
 pme/embedding_generator/diff2vec.py
 pme/embedding_generator/dwc.py

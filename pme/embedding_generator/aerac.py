@@ -9,15 +9,16 @@ from time import time
 from ..utils import get_device
 
 
-class AETE(nn.Module):
+class AErac(nn.Module):
     """
-    Implementation of AETE (AutoEncoder to Train Embeddings) model
+    Implementation of AErac (AutoEncoder to Reconstruct
+    the Context of an Activity) model
     """
 
     def __init__(self, num_categories: int, win_size: int,
                  emb_size: int, device: torch.device, seed: int = 21):
         """
-        Creates the model for AETE embeddings
+        Creates the model for AErac embeddings
         :param num_categories: Number of unique categories (number
         of different embeddings)
         :param win_size: Size of the context window
@@ -37,18 +38,19 @@ class AETE(nn.Module):
 
         self.input_acts = nn.ModuleList([nn.Linear(in_features=num_categories,
                                                    out_features=emb_size,
-                                                   bias=False) for i in range(2*win_size+1)])
+                                                   bias=False) for i in range(2 * win_size + 1)])
 
-        self.hidden_layer_in = nn.Linear(in_features=(2*win_size+1) * emb_size,
+        self.hidden_layer_in = nn.Linear(in_features=(2 * win_size + 1) * emb_size,
                                          out_features=emb_size,
                                          bias=False)
+
         self.hidden_layer_out = nn.Linear(in_features=emb_size,
-                                          out_features=(2*win_size+1) * emb_size,
+                                          out_features=(2 * win_size + 1) * emb_size,
                                           bias=False)
 
-        self.output_acts = nn.ModuleList([nn.Linear(in_features=emb_size,
+        self.output_acts = nn.ModuleList([nn.Linear(in_features=(2 * win_size + 1) * emb_size,
                                                     out_features=num_categories,
-                                                    bias=False) for i in range(2*win_size+1)])
+                                                    bias=False) for i in range(2 * win_size + 1)])
 
         self.to(device)
 
@@ -63,11 +65,10 @@ class AETE(nn.Module):
 
     def decode(self, x: torch.Tensor):
         h = F.relu(self.hidden_layer_out(x))
-        out = torch.Tensor().to(self.device)
+        out = []
         for i in range(2 * self.win_size + 1):
-            h_split = h[:, i * self.emb_size:(i + 1) * self.emb_size]
-            out_split = F.softmax(self.output_acts[i](h_split), dim=-1)
-            out = torch.cat([out, out_split], dim=-1)
+            out_split = self.output_acts[i](h)
+            out.append(out_split)
         return out
 
     def forward(self, inputs):
@@ -88,7 +89,8 @@ class AETE(nn.Module):
 
         for case in cases:
             for i in range(len(case)):
-                context = torch.zeros((2*self.win_size+1) * self.num_categories)
+                context = torch.zeros((2*self.win_size+1) * self.num_categories,
+                                      device=self.device)
                 context[self.win_size*self.num_categories + case[i]] = 1
 
                 for w in range(self.win_size):
@@ -117,7 +119,7 @@ class AETE(nn.Module):
 
     def save_model(self, path_model: str):
         """
-        Save the full AETE module
+        Save the full AErac module
         :param path_model: Full path where model will be stored
         """
         directory = pathlib.Path(path_model).parent
@@ -129,7 +131,7 @@ class AETE(nn.Module):
         self = torch.load(path_model)
 
     def train_embeddings(self, learning_rate: float, epochs: int, early_stop: int = None,
-                         path_model: str = './models/AETE_model.m'):
+                         path_model: str = './models/AErac_model.m'):
         """
         Train the AETE model with the stored 'train_loader'
         and validate it with the stored 'val_loader'. The best
@@ -143,7 +145,7 @@ class AETE(nn.Module):
         """
 
         optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
-        loss_fn = nn.MSELoss().to(self.device)
+        loss_fn = nn.CrossEntropyLoss().to(self.device)
 
         best_val_loss = np.inf
         trigger_times = 0
@@ -156,10 +158,15 @@ class AETE(nn.Module):
             for mini_batch in self.train_loader:
                 inputs = mini_batch[0]
                 outputs = mini_batch[1]
+                outputs = torch.split(outputs,
+                                      [self.num_categories for _
+                                       in range(2 * self.win_size + 1)], dim=-1)
 
                 self.zero_grad()
                 reconstruction = self(inputs)
-                loss = loss_fn(reconstruction, outputs)
+                loss = 0
+                for i in range(2 * self.win_size + 1):
+                    loss = loss + loss_fn(reconstruction[i], outputs[i])
                 loss.backward()
                 optimizer.step()
 
@@ -171,9 +178,14 @@ class AETE(nn.Module):
                 for mini_batch in self.val_loader:
                     inputs = mini_batch[0]
                     outputs = mini_batch[1]
+                    outputs = torch.split(outputs,
+                                          [self.num_categories for _
+                                           in range(2 * self.win_size + 1)], dim=-1)
 
                     reconstruction = self(inputs)
-                    loss = loss_fn(reconstruction, outputs)
+                    loss = 0
+                    for i in range(2 * self.win_size + 1):
+                        loss = loss + loss_fn(reconstruction[i], outputs[i])
                     val_sum_loss.append(loss.item())
 
                 val_avg_loss = np.mean(np.array(val_sum_loss))
@@ -191,12 +203,42 @@ class AETE(nn.Module):
 
         self.load_best_model(path_model)
 
+    def get_reconstruction_accuracy(self, split: str) -> float:
+        """
+        Test the accuracy of the autoencoder reconstructing the context
+        :param split: Partition to use (train, val or test)
+        :return: The accuracy reconstructing contexts
+        """
+        if split == 'train':
+            loader = self.train_loader
+        if split == 'val':
+            loader = self.val_loader
+        if split == 'test':
+            loader = self.test_loader
 
-def get_aete_embeddings(train_cases: list[list], val_cases: list[list], win_size: int, emb_size: int,
+        self.eval()
+
+        val_sum_acc = []
+        for mini_batch in loader:
+            inputs = mini_batch[0]
+            outputs = mini_batch[1]
+            outputs = torch.split(outputs, [self.num_categories for _
+                                            in range(2 * self.win_size + 1)], dim=-1)
+
+            reconstruction = self(inputs)
+            for i in range(2 * self.win_size + 1):
+                idx_outputs = torch.argmax(outputs[i], dim=-1)
+                idx_reconst = torch.argmax(reconstruction[i], dim=-1)
+                val_sum_acc.extend(np.array((idx_outputs == idx_reconst).cpu()))
+
+        return np.mean(val_sum_acc).item()
+
+
+def get_aerac_embeddings(train_cases: list[list], val_cases: list[list], win_size: int, emb_size: int,
                         num_categories: int, learning_rate: float = 0.05, epochs: int = 200,
-                        batch_size: int = 32, seed: int = 21, use_gpu: bool = True) -> (dict, float):
+                        batch_size: int = 32, seed: int = 21, use_gpu: bool = True) -> (dict, float, float):
     """
-    Train AETE embeddings and return a dictionary with pairs [activity identifier - embedding]
+    Train AErac embeddings and return a dictionary with pairs [activity identifier - embedding]
     :param train_cases: List of lists, each of which contains the activities of each case in training partition
     :param val_cases: List of lists, each of which contains the activities of each case in validation partition
     :param win_size: Size of the window context
@@ -208,21 +250,24 @@ def get_aete_embeddings(train_cases: list[list], val_cases: list[list], win_size
     :param seed: Seed to set the random state and get reproducibility
     :param use_gpu: Boolean indicating if GPU for the training of the embeddings
     :return: Dictionary with the embeddings and the time expended during the training
+    and the reconstruction accuracy in the validation split
     """
     device = get_device(use_gpu)
 
     start_time = time()
-    aete_model = AETE(num_categories, win_size, emb_size, device, seed)
-    aete_model.get_autoencoder_dataloader(train_cases, batch_size, 'train')
-    aete_model.get_autoencoder_dataloader(val_cases, batch_size, 'val')
-    aete_model.train_embeddings(learning_rate, epochs, 10)
+    aerac_model = AErac(num_categories, win_size, emb_size, device, seed)
+    aerac_model.get_autoencoder_dataloader(train_cases, batch_size, 'train')
+    aerac_model.get_autoencoder_dataloader(val_cases, batch_size, 'val')
+    aerac_model.train_embeddings(learning_rate, epochs, 10)
     end_time = time()
 
+    accuracy = aerac_model.get_reconstruction_accuracy('val')
+
     dict_embeddings = {}
-    weights = list(aete_model.output_acts[win_size].parameters())[0].data
-    for i in range(aete_model.num_categories):
+    weights = list(aerac_model.input_acts[win_size].parameters())[0].data
+    for i in range(aerac_model.num_categories):
         dict_embeddings.update({
-            i: weights[i, :].cpu().numpy()
+            i: weights[:, i].cpu().numpy()
         })
 
-    return dict_embeddings, end_time - start_time
+    return dict_embeddings, end_time - start_time, accuracy
